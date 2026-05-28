@@ -1,0 +1,5 @@
+{
+  "delay": 1.0,
+  "drop_rate": 20,
+  "corruption_rate": 10
+}

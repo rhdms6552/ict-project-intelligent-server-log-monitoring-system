@@ -1,0 +1,5 @@
+[2025-06-01 12:00:01] INFO Request processed successfully
+[2025-06-01 12:00:03] WARNING CPU usage exceeded 80%
+[2025-06-01 12:00:05] ERROR Database connection timeout
+[2025-06-01 12:00:07] CRITICAL Service unavailable - restart required
+[2025-06-01 12:00:09] INFO Cache refreshed for active session
