@@ -1,48 +1,125 @@
 # Troubleshooting
 
-## 1. Multiprocessing permission or duplicate-process issues
-### Problem
-While testing on Windows, multiple backend processes were sometimes left running at the same time.
-This caused inconsistent dashboard behavior, duplicated updates, and confusing status transitions.
+This document summarizes the major bugs and issues encountered during development and how they were solved.
+
+## 1. Duplicate Backend Processes on Windows
+
+### Symptoms
+- The dashboard values changed in unexpected ways.
+- `state.json` was updated too frequently or inconsistently.
+- The system status sometimes changed in a confusing way because multiple `main.py` processes were running at the same time.
+
+### Cause
+The backend uses `multiprocessing` on Windows. During repeated testing, old Python backend processes were not always stopped before starting a new one. As a result, several backend instances wrote to the same `data/state.json` file.
 
 ### Solution
-- ensured the backend uses:
+- Added the Windows multiprocessing guard in `src/main.py`:
   - `if __name__ == "__main__":`
   - `multiprocessing.freeze_support()`
-- stopped duplicate Python processes and restarted the project with exactly one backend instance and one dashboard instance
+- Stopped duplicate Python processes during testing.
+- Restarted the project with only one backend instance and one Streamlit dashboard instance.
 
-## 2. Dashboard slider values changing unexpectedly
-### Problem
-The dashboard auto-refreshes every second.
-Originally, slider values could appear to reset or change unexpectedly because the UI kept reloading while reading parameter values from disk.
+### Verification
+After cleanup, only one backend process updated `state.json`, and dashboard values became consistent again.
 
-### Solution
-- updated the Streamlit dashboard to use `st.session_state`
-- persisted slider values through a dedicated save callback
-- kept `data/params.json` as the backend-facing parameter source
+## 2. Streamlit Slider Values Changed Unexpectedly
 
-## 3. Recovered logs not clearly visible
-### Problem
-Recovered logs were being counted internally, but they were not easy to recognize in the live log stream.
-Also, early corruption logic damaged the entire log too aggressively, making recovery opportunities less visible.
+### Symptoms
+- `Delay`, `Drop Rate`, and `Corruption Rate` sometimes appeared to change or reset during dashboard refresh.
+- This made the live demo difficult because the selected values did not always feel stable.
+
+### Cause
+The dashboard refreshes every second with `st.rerun()`. The first version loaded slider values directly from `data/params.json` on every rerun, which could conflict with Streamlit's widget state.
 
 ### Solution
-- changed corruption behavior so the log level token is corrupted first
-- updated the live log stream renderer to highlight recovered entries as `RECOVERED`
-- added a `Recovered from:` detail line for recovered items
+- Updated `dashboard/dashboard.py` to use `st.session_state` for slider values.
+- Added a dedicated callback to save changed slider values to `data/params.json`.
+- Kept `params.json` as the backend-facing source of network constraint parameters.
 
-## 4. Dashboard showing stale data when backend is stopped
-### Problem
-If `state.json` remained on disk after the backend stopped, the dashboard could continue showing old information.
+### Verification
+After this change, slider values stayed stable during automatic dashboard refreshes, and backend parameter updates still worked.
+
+## 3. Recovered Logs Were Not Clearly Visible
+
+### Symptoms
+- The `Recovered` counter increased internally, but blue `RECOVERED` logs were hard to see in the dashboard.
+- During the demo, it was not obvious where the AI-based recovery result appeared.
+
+### Cause
+The original live log stream rendering did not make recovered entries visually prominent enough. Also, the early corruption logic damaged the whole log too randomly, so recoverable level-token corruption did not appear often enough.
 
 ### Solution
-- added stale-state detection in the dashboard
-- if `state.json` is missing or older than a short threshold, the dashboard shows `WAITING` and an offline message
+- Changed `src/network_constraint.py` so the log level token is corrupted first.
+- Kept the log structure mostly intact so `ai_recovery.py` can parse and recover the level token.
+- Updated `dashboard/dashboard.py` so recovered entries are displayed as blue `RECOVERED` rows.
+- Added a `Recovered from:` line to show the corrupted original value.
 
-## 5. Encoding issues in documentation
-### Problem
-Some earlier text content became unreadable due to encoding problems.
+### Verification
+After increasing `Corruption Rate`, recovered logs appeared in the `Live Log Stream`, and the `Recovered` counter increased as expected.
+
+## 4. Dashboard Showed Stale Data When Backend Was Stopped
+
+### Symptoms
+- If the backend stopped, the dashboard still displayed the last old values from `state.json`.
+- This made it look like the system was still running even when the backend was offline.
+
+### Cause
+The dashboard only checked whether `state.json` existed. It did not check whether the file was still being updated.
 
 ### Solution
-- rewrote the documentation files in clean UTF-8 text
-- kept the final repository documentation in simple English for submission clarity
+- Added stale-state detection in `dashboard/dashboard.py`.
+- If `state.json` is missing or older than a short threshold, the dashboard shows:
+  - `WAITING`
+  - an offline message
+  - empty counters and logs
+
+### Verification
+When the backend is stopped, the dashboard now changes to a waiting/offline state instead of showing outdated data.
+
+## 5. Live Log Stream Displayed Raw HTML-like Text
+
+### Symptoms
+- At one point, the live log stream displayed HTML-like text instead of clean colored log rows.
+- This made the dashboard harder to read during presentation rehearsal.
+
+### Cause
+The log stream used HTML rendering, but the output was not handled cleanly enough for the Streamlit version being used.
+
+### Solution
+- Escaped dynamic log text with Python's `html.escape`.
+- Switched the log stream rendering to `st.html`.
+- Preserved color labels for `INFO`, `WARNING`, `ERROR`, `CRITICAL`, `DROPPED`, and `RECOVERED`.
+
+### Verification
+The log stream now displays clean colored rows instead of raw HTML fragments.
+
+## 6. Documentation Encoding Problem
+
+### Symptoms
+- Some Korean text in `README.md` and `TROUBLESHOOTING.md` became unreadable due to encoding issues.
+
+### Cause
+The text was written or viewed with inconsistent character encoding.
+
+### Solution
+- Rewrote the final documentation in clean UTF-8 compatible English.
+- Kept the repository documentation simple and submission-focused.
+
+### Verification
+The final `README.md` and `TROUBLESHOOTING.md` are readable on GitHub and in the local editor.
+
+## 7. GitHub Authentication Issue During Submission
+
+### Symptoms
+- The initial `git push` failed with an authentication error.
+- The saved GitHub credential existed but was not accepted by GitHub.
+
+### Cause
+The stored credential was outdated or not usable for modern GitHub authentication.
+
+### Solution
+- Refreshed GitHub authentication using Git Credential Manager.
+- Re-ran the GitHub repository creation and push process after login.
+
+### Verification
+The repository was successfully pushed to GitHub after authentication was refreshed.
