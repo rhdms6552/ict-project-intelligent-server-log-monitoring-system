@@ -15,11 +15,11 @@ The system covers the full pipeline:
 ## Repository Structure
 ```text
 /
-├── src/                     # all source code
-├── dashboard/               # web GUI code
-├── data/                    # sample or synthetic data
-├── README.md
-└── TROUBLESHOOTING.md
+|-- src/                     # all source code
+|-- dashboard/               # web GUI code
+|-- data/                    # sample or synthetic data
+|-- README.md
+`-- TROUBLESHOOTING.md
 ```
 
 ## Core Logic
