@@ -102,12 +102,9 @@ pip install streamlit pandas
 ```
 
 ## Demo / Video Link
-Mandatory submission item:
+Project demo video:
 
-`Add your video link here before final submission`
-
-Example:
-`https://youtu.be/your-video-id`
+[Watch the demo video](https://www.youtube.com/watch?v=_GCm3KKaVf0)
 
 ## Notes
 - The dashboard shows a `WAITING` state if the backend is not running or `state.json` is stale.
