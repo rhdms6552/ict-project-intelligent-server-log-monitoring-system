@@ -18,9 +18,13 @@ The system covers the full pipeline:
 |-- src/                     # all source code
 |-- dashboard/               # web GUI code
 |-- data/                    # sample or synthetic data
+|-- assets/                  # dashboard screenshots
 |-- README.md
 `-- TROUBLESHOOTING.md
 ```
+
+## Dashboard Preview
+![Dashboard Screenshot](assets/dashboard.png)
 
 ## Core Logic
 ### 1. Data Generation
