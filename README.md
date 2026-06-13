@@ -24,7 +24,7 @@ The system covers the full pipeline:
 ```
 
 ## Dashboard Preview
-![Dashboard Screenshot](assets/dashboard.png)
+![Dashboard Screenshot](assets/dashboard-preview.png)
 
 ## Core Logic
 ### 1. Data Generation
